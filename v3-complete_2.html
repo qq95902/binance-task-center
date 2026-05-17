@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>币安任务中心</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0B0E14;--bg-card:#151A22;--primary:#F0B90B;--text:#EAEAEA;--text-2:#9CA3AF;--text-3:#6B7280;--border:rgba(255,255,255,0.08);--green:#00C087}
+body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',system-ui,sans-serif;min-height:100vh}
+.nav{background:rgba(11,14,20,0.95);backdrop-filter:blur(20px);padding:15px 30px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
+.nav-left{display:flex;gap:25px;align-items:center}
+.nav-left h2{font-size:17px;cursor:pointer}
+.nav-links{display:flex;gap:5px}
+.nav-link{padding:8px 16px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s;border:1px solid transparent;color:var(--text-2)}
+.nav-link:hover{color:var(--text);background:rgba(255,255,255,0.05)}
+.nav-link.active{color:var(--primary);background:rgba(240,185,11,0.1);border-color:rgba(240,185,11,0.2)}
+.btn{padding:10px 20px;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:14px;transition:all 0.2s}
+.btn-primary{background:var(--primary);color:#000}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(240,185,11,0.3)}
+.btn-secondary{background:rgba(255,255,255,0.05);color:var(--text);border:1px solid var(--border)}
+.btn-danger{background:rgba(246,70,93,0.1);color:#F6465D;border:1px solid rgba(246,70,93,0.2)}
+.container{max-width:1280px;margin:0 auto;padding:30px}
+.page{display:none}
+.page.active{display:block;animation:fadeIn 0.3s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes scroll{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
+.section{margin-bottom:35px}
+.section h3{margin-bottom:20px;font-size:16px;font-weight:700}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px}
+.grid-2{grid-template-columns:repeat(2,1fr)}
+.grid-4{grid-template-columns:repeat(4,1fr)}
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;transition:all 0.25s}
+.card:hover{border-color:rgba(240,185,11,0.3);transform:translateY(-2px)}
+.task-card{cursor:pointer}
+.task-card h4{margin-bottom:10px;font-size:15px}
+.task-card p{color:var(--text-2);font-size:13px;margin-bottom:16px;line-height:1.6}
+.reward{color:var(--primary);font-size:28px;font-weight:700;font-family:monospace}
+.badge{display:inline-block;padding:4px 11px;background:rgba(240,185,11,0.12);color:var(--primary);border-radius:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px}
+.stat-card{text-align:center}
+.stat-card .label{font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px}
+.stat-card .value{font-size:32px;font-weight:700;font-family:monospace;color:var(--primary)}
+.profile-header{background:linear-gradient(135deg,#151A22 0%,#1C2330 100%);border:1px solid var(--border);border-radius:14px;padding:32px;display:flex;gap:24px;align-items:flex-start;margin-bottom:25px}
+.profile-avatar{width:80px;height:80px;border-radius:14px;background:linear-gradient(135deg,var(--primary) 0%,#F5A623 100%);display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:800;color:#000;box-shadow:0 0 24px rgba(240,185,11,0.2)}
+.profile-info{flex:1}
+.profile-info h3{font-size:22px;margin-bottom:6px}
+.profile-info .address{font-family:monospace;font-size:13px;color:var(--text-2);margin-bottom:14px}
+.profile-points{text-align:right}
+.profile-points .value{font-size:40px;font-weight:700;font-family:monospace;color:var(--primary)}
+.profile-points .label{font-size:12px;color:var(--text-3);margin-bottom:12px}
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:12px;font-weight:700;color:var(--text-2);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px}
+.form-input{width:100%;padding:12px 16px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;transition:border 0.2s}
+.form-input:focus{outline:none;border-color:rgba(240,185,11,0.4)}
+.score-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:18px}
+.score-item{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center}
+.score-item .value{font-size:26px;font-weight:700;font-family:monospace;color:var(--primary);margin-bottom:6px}
+.score-item .label{font-size:11px;color:var(--text-3);line-height:1.4}
+.bind-section{background:rgba(0,192,135,0.08);border:1px solid rgba(0,192,135,0.2);border-radius:10px;padding:16px;margin-top:12px}
+.bind-section .title{font-size:14px;font-weight:700;color:var(--green);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.social-btn{width:100%;padding:14px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,0.02);color:var(--text-2);font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:12px;margin-bottom:12px;transition:all 0.2s}
+.social-btn:hover{border-color:rgba(240,185,11,0.3);color:var(--text)}
+.social-bound{background:rgba(0,192,135,0.08);border:1px solid rgba(0,192,135,0.25);border-radius:8px;padding:13px;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;color:var(--green);margin-bottom:12px}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(10px);align-items:center;justify-content:center;z-index:1000;padding:20px}
+.modal.show{display:flex}
+.modal-box{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:32px;max-width:520px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,0.6)}
+.modal-box h3{font-size:20px;margin-bottom:18px}
+.modal-box .desc{color:var(--text-2);font-size:14px;margin-bottom:20px;line-height:1.6}
+.step{padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;gap:14px;align-items:flex-start}
+.step:last-child{border:none}
+.step-num{width:26px;height:26px;border-radius:50%;background:rgba(240,185,11,0.15);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.step-text{color:var(--text-2);font-size:13px;padding-top:3px;line-height:1.5}
+.wallet-chip{display:inline-flex;align-items:center;gap:8px;padding:8px 18px;background:var(--bg-card);border:1px solid var(--border);border-radius:100px;font-family:monospace;font-size:13px;font-weight:600;cursor:pointer}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+@media(max-width:768px){.grid{grid-template-columns:1fr}.grid-2,.grid-4{grid-template-columns:1fr}.score-grid{grid-template-columns:repeat(2,1fr)}.nav-links{display:none}.section>div[style*="grid-template-columns:repeat(4"]{grid-template-columns:repeat(2,1fr)!important}}
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="nav-left">
+    <h2 onclick="goPage('home')">🪙 币安任务中心</h2>
+    <div class="nav-links">
+      <div class="nav-link active" id="nav-home" onclick="goPage('home')">首页</div>
+      <div class="nav-link" id="nav-tasks" onclick="goPage('tasks')">任务大厅</div>
+      <div class="nav-link" id="nav-profile" onclick="goPage('profile')">个人中心</div>
+      <div class="nav-link" id="nav-project" onclick="goPage('project')">项目后台</div>
+    </div>
+  </div>
+  <div>
+    <button class="btn btn-primary" id="connectBtn" onclick="connectWallet()">连接钱包</button>
+    <div class="wallet-chip" id="walletChip" style="display:none" onclick="goPage('profile')">
+      <div class="dot"></div>
+      <span id="walletAddr"></span>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- 首页 -->
+<div class="page active" id="page-home">
+  <!-- 滚动播报 / 广告位 -->
+  <div class="marquee-container section" style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:25px;overflow:hidden">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="background:rgba(240,185,11,0.15);color:var(--primary);padding:4px 12px;border-radius:6px;font-size:12px;font-weight:700;white-space:nowrap">📢 公告</div>
+      <div class="marquee-content" style="flex:1;color:var(--text-2);font-size:14px;white-space:nowrap;overflow:hidden">
+        <div style="display:inline-block;padding-left:100%;animation:scroll 30s linear infinite">
+          🎉 平台已累计发放 $48,000 奖励！· 🔥 新任务上线：完成可获得双倍积分 · 💎 VIP用户专享任务即将开放 · 📊 本周热门：币安广场互动任务参与人数突破10,000
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 统计数据 - 横排 -->
+  <div class="section">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+      <div class="stat-card card">
+        <div class="label">平台用户</div>
+        <div class="value">12,584</div>
+      </div>
+      <div class="stat-card card">
+        <div class="label">活跃任务</div>
+        <div class="value">186</div>
+      </div>
+      <div class="stat-card card">
+        <div class="label">已发奖励</div>
+        <div class="value">$48K</div>
+      </div>
+      <div class="stat-card card">
+        <div class="label">平台评分</div>
+        <div class="value">9.8</div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="section">
+    <h3>🔥 热门任务</h3>
+    <div class="grid" id="homeTaskList"></div>
+  </div>
+</div>
+
+<!-- 任务大厅 -->
+<div class="page" id="page-tasks">
+  <div class="section">
+    <h3>📋 全部任务</h3>
+    <div class="grid" id="allTaskList"></div>
+  </div>
+</div>
+
+<!-- 个人中心 -->
+<div class="page" id="page-profile">
+  <div class="profile-header">
+    <div class="profile-avatar" id="avatar">U</div>
+    <div class="profile-info">
+      <h3 id="username">User</h3>
+      <div class="address" id="userAddr">0x...</div>
+      <div style="font-size:13px;color:var(--text-2)">💎 信用评分: <span id="creditScore" style="color:var(--primary);font-weight:700">0</span> / 100</div>
+    </div>
+    <div class="profile-points">
+      <div class="label">总积分</div>
+      <div class="value" id="totalPoints">0</div>
+      <button class="btn btn-danger" style="font-size:12px;padding:7px 16px;margin-top:8px" onclick="disconnect()">断开连接</button>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h4 style="margin-bottom:18px">🟨 币安广场账号绑定</h4>
+      <div id="binanceForm">
+        <div class="form-group">
+          <label class="form-label">主页链接</label>
+          <input type="text" class="form-input" id="binanceUrl" placeholder="https://www.binance.com/zh-CN/square/profile/...">
+        </div>
+        <div class="grid-2" style="gap:12px">
+          <div class="form-group">
+            <label class="form-label">粉丝数</label>
+            <input type="number" class="form-input" id="fans" placeholder="60000">
+          </div>
+          <div class="form-group">
+            <label class="form-label">发帖数</label>
+            <input type="number" class="form-input" id="posts" placeholder="500">
+          </div>
+        </div>
+        <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="bindBinance()">绑定账号</button>
+      </div>
+      <div class="bind-section" id="binanceBound" style="display:none">
+        <div class="title">✅ 已绑定币安广场</div>
+        <div id="binanceInfo" style="font-size:12px;font-family:monospace;color:var(--text-2);line-height:1.8"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h4 style="margin-bottom:18px">🔗 社交媒体绑定</h4>
+      <div id="twitterBtn">
+        <button class="social-btn" onclick="bindSocial('twitter')">
+          <span>🐦</span><span>绑定 Twitter / X</span><span style="margin-left:auto;font-size:12px;color:var(--text-3)">+10分</span>
+        </button>
+      </div>
+      <div class="social-bound" id="twitterBound" style="display:none">
+        <span>🐦</span><span>Twitter 已绑定</span><span style="margin-left:auto;font-size:12px">+10分 ✓</span>
+      </div>
+      
+      <div id="telegramBtn">
+        <button class="social-btn" onclick="bindSocial('telegram')">
+          <span>✈️</span><span>绑定 Telegram</span><span style="margin-left:auto;font-size:12px;color:var(--text-3)">+10分</span>
+        </button>
+      </div>
+      <div class="social-bound" id="telegramBound" style="display:none">
+        <span>✈️</span><span>Telegram 已绑定</span><span style="margin-left:auto;font-size:12px">+10分 ✓</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card section">
+    <h4 style="margin-bottom:8px">⭐ AI 信用评分明细</h4>
+    <p style="font-size:13px;color:var(--text-2);margin-bottom:4px">数据越完整，评分越高，可接更高奖励任务</p>
+    <div class="score-grid">
+      <div class="score-item">
+        <div class="value" id="score-fans">0</div>
+        <div class="label">粉丝数<br>(30%)</div>
+      </div>
+      <div class="score-item">
+        <div class="value" id="score-posts">0</div>
+        <div class="label">发帖数<br>(30%)</div>
+      </div>
+      <div class="score-item">
+        <div class="value" id="score-heat">0</div>
+        <div class="label">帖子热度<br>(20%)</div>
+      </div>
+      <div class="score-item">
+        <div class="value" id="score-likes">0</div>
+        <div class="label">获赞数<br>(10%)</div>
+      </div>
+      <div class="score-item">
+        <div class="value" id="score-social">0</div>
+        <div class="label">社交绑定<br>(10%)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 项目后台 -->
+<div class="page" id="page-project">
+  <div class="section">
+    <h3>📊 项目方后台</h3>
+    <div class="grid-4">
+      <div class="stat-card card">
+        <div class="label">我的任务</div>
+        <div class="value" id="myTaskCount">0</div>
+      </div>
+      <div class="stat-card card">
+        <div class="label">总参与人数</div>
+        <div class="value" id="totalParticipants">0</div>
+      </div>
+      <div class="stat-card card">
+        <div class="label">已发积分</div>
+        <div class="value" id="totalRewards">0</div>
+      </div>
+      <div class="stat-card card">
+        <div class="label">活跃任务</div>
+        <div class="value">0</div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <h4 style="margin-bottom:16px">发布新任务</h4>
+    <div class="form-group">
+      <label class="form-label">任务标题</label>
+      <input type="text" class="form-input" id="taskTitle" placeholder="输入任务标题...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">任务描述</label>
+      <input type="text" class="form-input" id="taskDesc" placeholder="描述用户需要完成什么...">
+    </div>
+    <div class="grid-2" style="gap:12px">
+      <div class="form-group">
+        <label class="form-label">积分奖励</label>
+        <input type="number" class="form-input" id="taskReward" placeholder="50">
+      </div>
+      <div class="form-group">
+        <label class="form-label">分类</label>
+        <select class="form-input" id="taskCat">
+          <option>binance</option>
+          <option>twitter</option>
+          <option>telegram</option>
+          <option>other</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="publishTask()">发布任务</button>
+  </div>
+</div>
+
+</div>
+
+<!-- 任务模态框 -->
+<div class="modal" id="taskModal">
+  <div class="modal-box">
+    <h3 id="modalTitle">任务详情</h3>
+    <p class="desc" id="modalDesc"></p>
+    <div id="modalSteps" style="margin-bottom:20px"></div>
+    <div style="font-size:22px;color:var(--primary);font-weight:700;margin-bottom:20px" id="modalReward"></div>
+    <button class="btn btn-primary" style="width:100%" onclick="completeTask()">✓ 我已完成任务</button>
+    <button class="btn btn-secondary" style="width:100%;margin-top:10px" onclick="closeModal()">关闭</button>
+  </div>
+</div>
+
+<script>
+const tasks=[
+  {id:1,cat:'binance',title:'关注币安广场官方账号',desc:'在币安广场关注官方账号并点赞最新帖子',reward:50,steps:['打开币安广场官方主页','点击关注按钮','为最新帖子点赞','返回点击完成']},
+  {id:2,cat:'twitter',title:'转发推文获积分',desc:'转发币安官方最新推文，需包含 #BNB 标签',reward:100,steps:['打开 X (Twitter)','找到 @binance 最新推文','转发并添加 #BNB 标签','返回点击完成']},
+  {id:3,cat:'telegram',title:'加入官方 TG 社区',desc:'加入官方 Telegram 群组并完成新人验证',reward:40,steps:['打开 Telegram','搜索 @BinanceEnglish','加入群组','完成验证','返回点击完成']},
+  {id:4,cat:'binance',title:'发布优质内容',desc:'在币安广场发布一篇关于加密货币的优质内容',reward:150,steps:['前往币安广场','点击发帖','撰写至少200字内容','发布帖子','返回点击完成']},
+  {id:5,cat:'twitter',title:'评论并互动',desc:'对指定推文发表有价值的评论，不少于20字',reward:80,steps:['打开指定推文','写下20字以上评论','点赞该推文','返回点击完成']},
+  {id:6,cat:'other',title:'邀请好友注册',desc:'邀请3位好友注册并完成首次任务',reward:200,steps:['生成邀请链接','分享给好友','好友完成注册','好友完成首个任务','返回点击完成']}
+];
+
+const STATE={
+  wallet:null,
+  points:0,
+  completed:new Set(),
+  binance:null,
+  twitter:false,
+  telegram:false,
+  myTasks:[],
+  proofs:{},
+  load(){try{const d=JSON.parse(localStorage.getItem('btc-data')||'{}');this.wallet=d.wallet;this.points=d.points||0;this.completed=new Set(d.completed||[]);this.binance=d.binance;this.twitter=d.twitter||false;this.telegram=d.telegram||false;this.myTasks=d.myTasks||[];this.proofs=d.proofs||{};}catch(e){}},
+  save(){try{localStorage.setItem('btc-data',JSON.stringify({wallet:this.wallet,points:this.points,completed:[...this.completed],binance:this.binance,twitter:this.twitter,telegram:this.telegram,myTasks:this.myTasks,proofs:this.proofs}));}catch(e){}}
+};
+
+let currentTask=null;
+
+function renderTasks(el,list){
+  const html=list.map(t=>`
+    <div class="card task-card" onclick="openTask(${t.id})">
+      <div style="margin-bottom:12px"><span class="badge">${t.cat}</span></div>
+      <h4>${t.title}</h4>
+      <p>${t.desc}</p>
+      <div class="reward">+${t.reward} 积分</div>
+    </div>
+  `).join('');
+  document.getElementById(el).innerHTML=html;
+}
+
+function goPage(id){
+  if(id!=='home'&&!STATE.wallet){alert('请先连接钱包');connectWallet();return;}
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.getElementById('nav-'+id)?.classList.add('active');
+  if(id==='profile')updateProfile();
+  if(id==='project')updateProject();
+  window.scrollTo(0,0);
+}
+
+function openTask(id){
+  if(!STATE.wallet){alert('请先连接钱包');return;}
+  currentTask=tasks.find(t=>t.id===id);
+  if(!currentTask)return;
+  document.getElementById('modalTitle').textContent=currentTask.title;
+  document.getElementById('modalDesc').textContent=currentTask.desc;
+  document.getElementById('modalReward').textContent=`奖励: +${currentTask.reward} 积分`;
+  document.getElementById('modalSteps').innerHTML=currentTask.steps.map((s,i)=>`
+    <div class="step"><div class="step-num">${i+1}</div><div class="step-text">${s}</div></div>
+  `).join('');
+  document.getElementById('taskModal').classList.add('show');
+}
+
+function closeModal(){
+  document.getElementById('taskModal').classList.remove('show');
+}
+
+function completeTask(){
+  if(!currentTask)return;
+  
+  // 弹出验证输入框
+  const proof = prompt('请提交完成证明：\n\n可以是：\n1. 截图链接（上传到图床后的URL）\n2. 帖子链接（币安广场/Twitter等）\n\n请输入链接：');
+  
+  if(!proof || proof.trim()===''){
+    alert('❌ 未提交证明，无法完成任务');
+    return;
+  }
+  
+  // 简单验证是否是URL
+  if(!proof.startsWith('http://') && !proof.startsWith('https://')){
+    alert('❌ 请输入有效的链接地址（以 http:// 或 https:// 开头）');
+    return;
+  }
+  
+  // 保存证明
+  if(!STATE.proofs) STATE.proofs = {};
+  STATE.proofs[currentTask.id] = {
+    link: proof,
+    time: new Date().toISOString(),
+    task: currentTask.title
+  };
+  
+  STATE.completed.add(currentTask.id);
+  STATE.points+=currentTask.reward;
+  STATE.save();
+  
+  alert(`✅ 任务完成！\n\n已提交证明，获得 ${currentTask.reward} 积分\n\n证明链接: ${proof.slice(0,50)}...`);
+  closeModal();
+  updateProfile();
+}
+
+async function connectWallet(){
+  try{
+    const provider=window.ethereum||window.okxwallet;
+    if(!provider){alert('请安装 MetaMask 或 OKX 钱包插件');return;}
+    const accounts=await provider.request({method:'eth_requestAccounts'});
+    if(accounts&&accounts.length){
+      STATE.wallet=accounts[0];
+      STATE.save();
+      updateNav();
+      alert('钱包连接成功！');
+    }
+  }catch(e){
+    alert('连接失败: '+(e.message||'用户取消'));
+  }
+}
+
+function disconnect(){
+  STATE.wallet=null;
+  STATE.save();
+  updateNav();
+  goPage('home');
+  alert('已断开连接');
+}
+
+function updateNav(){
+  const btn=document.getElementById('connectBtn');
+  const chip=document.getElementById('walletChip');
+  const addr=document.getElementById('walletAddr');
+  if(STATE.wallet){
+    btn.style.display='none';
+    chip.style.display='inline-flex';
+    addr.textContent=STATE.wallet.slice(0,6)+'...'+STATE.wallet.slice(-4);
+  }else{
+    btn.style.display='';
+    chip.style.display='none';
+  }
+}
+
+function bindBinance(){
+  const url=document.getElementById('binanceUrl').value.trim();
+  const fans=parseInt(document.getElementById('fans').value)||0;
+  const posts=parseInt(document.getElementById('posts').value)||0;
+  if(!url||!fans||!posts){alert('请填写所有字段');return;}
+  STATE.binance={url,fans,posts};
+  updateScore();
+  STATE.save();
+  updateProfile();
+  alert('币安广场账号绑定成功！');
+}
+
+function bindSocial(type){
+  if(type==='twitter'){
+    window.open('https://twitter.com/intent/follow?screen_name=binance','_blank');
+    setTimeout(()=>{
+      STATE.twitter=true;
+      updateScore();
+      STATE.save();
+      updateProfile();
+      alert('Twitter 绑定成功！+10分');
+    },1500);
+  }else{
+    window.open('https://t.me/binance','_blank');
+    setTimeout(()=>{
+      STATE.telegram=true;
+      updateScore();
+      STATE.save();
+      updateProfile();
+      alert('Telegram 绑定成功！+10分');
+    },1500);
+  }
+}
+
+function updateScore(){
+  let s1=0,s2=0,s3=0,s4=0,s5=0;
+  if(STATE.binance){
+    const{fans,posts}=STATE.binance;
+    s1=Math.min((fans/100000)*30,30);
+    s2=Math.min((posts/10000)*30,30);
+    s3=Math.min((posts/1000)*20,20);
+    s4=10;
+  }
+  if(STATE.twitter)s5+=5;
+  if(STATE.telegram)s5+=5;
+  return Math.round(s1+s2+s3+s4+s5);
+}
+
+function updateProfile(){
+  if(!STATE.wallet)return;
+  document.getElementById('avatar').textContent=STATE.wallet.slice(2,3).toUpperCase();
+  document.getElementById('username').textContent='User_'+STATE.wallet.slice(2,8);
+  document.getElementById('userAddr').textContent=STATE.wallet;
+  document.getElementById('totalPoints').textContent=STATE.points.toLocaleString();
+  const score=updateScore();
+  document.getElementById('creditScore').textContent=score;
+  document.getElementById('score-fans').textContent=STATE.binance?Math.min(30,Math.round((STATE.binance.fans/100000)*30)):0;
+  document.getElementById('score-posts').textContent=STATE.binance?Math.min(30,Math.round((STATE.binance.posts/10000)*30)):0;
+  document.getElementById('score-heat').textContent=STATE.binance?Math.min(20,Math.round((STATE.binance.posts/1000)*20)):0;
+  document.getElementById('score-likes').textContent=STATE.binance?10:0;
+  document.getElementById('score-social').textContent=(STATE.twitter?5:0)+(STATE.telegram?5:0);
+  if(STATE.binance){
+    document.getElementById('binanceForm').style.display='none';
+    document.getElementById('binanceBound').style.display='';
+    document.getElementById('binanceInfo').innerHTML=`用户: ${STATE.binance.url.split('/').pop()}<br>粉丝: ${STATE.binance.fans.toLocaleString()}<br>发帖: ${STATE.binance.posts.toLocaleString()}`;
+  }
+  if(STATE.twitter){
+    document.getElementById('twitterBtn').style.display='none';
+    document.getElementById('twitterBound').style.display='flex';
+  }
+  if(STATE.telegram){
+    document.getElementById('telegramBtn').style.display='none';
+    document.getElementById('telegramBound').style.display='flex';
+  }
+}
+
+function publishTask(){
+  const title=document.getElementById('taskTitle').value.trim();
+  const desc=document.getElementById('taskDesc').value.trim();
+  const reward=parseInt(document.getElementById('taskReward').value)||0;
+  const cat=document.getElementById('taskCat').value;
+  if(!title||!desc||!reward){alert('请填写所有字段');return;}
+  const task={id:Date.now(),cat,title,desc,reward,steps:['完成'+title,'返回点击完成']};
+  STATE.myTasks.push(task);
+  tasks.push(task);
+  STATE.save();
+  alert('任务发布成功！');
+  renderTasks('homeTaskList',tasks.slice(0,6));
+  renderTasks('allTaskList',tasks);
+  updateProject();
+  document.getElementById('taskTitle').value='';
+  document.getElementById('taskDesc').value='';
+  document.getElementById('taskReward').value='';
+}
+
+function updateProject(){
+  document.getElementById('myTaskCount').textContent=STATE.myTasks.length;
+  document.getElementById('totalParticipants').textContent=STATE.myTasks.reduce((s,t)=>s+Math.floor(Math.random()*100),0);
+  document.getElementById('totalRewards').textContent=STATE.myTasks.reduce((s,t)=>s+t.reward*Math.floor(Math.random()*50),0).toLocaleString();
+}
+
+document.getElementById('taskModal').addEventListener('click',e=>{
+  if(e.target.id==='taskModal')closeModal();
+});
+
+STATE.load();
+updateNav();
+renderTasks('homeTaskList',tasks.slice(0,6));
+renderTasks('allTaskList',tasks);
+if(STATE.wallet)updateProfile();
+</script>
+</body>
+</html>
